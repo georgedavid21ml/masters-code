@@ -1,0 +1,67 @@
+h = 6.626068e-34; # Planck's constant (in Joules)
+eleczoffset=0;
+
+
+
+nps = 6242;
+Qtot = -0.01e-12;
+lambda = 400e-9; # Laser wave length = 400nm, 3.1 eV
+Ephoton = h*c/lambda; # Laser energy per photon
+W = -2.7*qe; # Work function
+Eelec = Ephoton - W; # The electrons come off the photocathode with photon energy minus work function
+radius = 100.e-6; # Beam size is 200 micron, 100 um radius
+pulse = 50.e-15; # Laser pulse length is 35 fs. FWHM.
+
+
+G = 1+ Eelec/(me*c^2) ; # Corresponding Lorentz factor G
+GB = sqrt(G^2-1); # corresponding gamma*beta
+
+
+G1=1+(Eelec+(0.018*1.602e-19))/(me*c^2);
+GB1 = sqrt(G1^2-1); # corresponding gamma*beta
+
+GBspread=GB1-GB;
+
+# Initial electron distribution on photocathode
+setparticles("beam",nps,me,qe,Qtot); # Set Particles
+setxdist("beam","g",0,radius,3,3); # Gaussian distribution in x direction
+setydist("beam","g",0,radius,3,3); # Gaussian distribution in y direction
+settdist("beam","g",0,pulse,3,3); # Starting time for different electrons is distributed as a Gaussian in time
+#setzdist("beam", "g", 0, radius, 3, 3) ;
+setGBzdist("beam","g",GB,GBspread,3,3);
+
+map2D_E("wcs","z",0,"field_map(100-95-0).gdf","r","z","E_r","E_z",1);
+
+R = 1e-9;
+
+#setrmacrodist("beam","u",R,0) ;
+spacecharge3Dmesh();
+
+
+# grid aperture
+grid_aperture = 0.5e-3; # radius
+grid_thickness = 0.1e-3; # 0.1mm
+grid_position= 0;
+rmax("wcs","z",grid_position,grid_aperture,grid_thickness);
+# Only electrons with R=(sqrt(x^2+y^2)<aperture continue, format: Rmax(ECS,R,L)
+
+ 
+
+# 1st anode aperture
+ph_aperture1 =	0.9e-3; # radius
+ph_thickness1 = 0.1e-3;
+ph_position1= 3.35e-3;
+rmax("wcs","z",ph_position1,ph_aperture1,ph_thickness1);
+# Only electrons with R=(sqrt(x^2+y^2)<aperture continue, format: Rmax(ECS,R,L)
+
+ 
+
+# 2nd anode aperture
+ph_aperture2 = 1.575e-3; # radius
+ph_thickness2 = 0.75e-3;
+ph_position2= 28.25e-3;
+rmax("wcs","z",ph_position2,ph_aperture2,ph_thickness2);
+
+ 
+
+tout(0, 5e-10,0.1e-10) ;
